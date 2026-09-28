@@ -64,6 +64,23 @@ public class StoreAPI {
 		return new PendingCommandsResponse(this.api, response);
 	}
 
+	/** Start a bounded command sweep. The original pendingCommands method remains available. */
+	public PendingCommandsResponse pendingCommandsPage(int connectionId) throws NamelessException {
+		JsonObject response = this.requests.get("store/pending-commands",
+				"connection_id", connectionId, "paged", 1);
+		return new PendingCommandsResponse(this.api, response);
+	}
+
+	/** Continue a sweep using the cursor and high-water ID returned by its previous page. */
+	public PendingCommandsResponse pendingCommandsPage(int connectionId,
+			PendingCommandsResponse.Cursor cursor, int highWaterId) throws NamelessException {
+		JsonObject response = this.requests.get("store/pending-commands",
+				"connection_id", connectionId, "paged", 1,
+				"high_water_id", highWaterId,
+				"cursor_order", cursor.order(), "cursor_id", cursor.id());
+		return new PendingCommandsResponse(this.api, response);
+	}
+
 	public void markCommandsExecuted(Collection<PendingCommandsResponse.PendingCommand> commands) throws NamelessException {
 		JsonArray array = new JsonArray(commands.size());
 		for (PendingCommandsResponse.PendingCommand command : commands) {
@@ -71,7 +88,12 @@ public class StoreAPI {
 		}
 		JsonObject body = new JsonObject();
 		body.add("commands", array);
-		this.requests.post("store/commands-executed", body);
+		JsonObject response = this.requests.post("store/commands-executed", body);
+		if (!response.has("success") || !response.get("success").getAsBoolean()
+				|| (response.has("requested_count")
+					&& response.get("requested_count").getAsInt() != commands.size())) {
+			throw new IllegalStateException("Store did not confirm command acknowledgement");
+		}
 	}
 
 }
