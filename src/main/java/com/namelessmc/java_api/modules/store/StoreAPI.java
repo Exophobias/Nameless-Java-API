@@ -89,9 +89,9 @@ public class StoreAPI {
 		JsonObject body = new JsonObject();
 		body.add("commands", array);
 		JsonObject response = this.requests.post("store/commands-executed", body);
-		if (!response.has("success") || !response.get("success").getAsBoolean()
+		if (!response.has("success") || !StoreWire.bool(response, "success")
 				|| (response.has("requested_count")
-					&& response.get("requested_count").getAsInt() != commands.size())) {
+					&& StoreWire.integer(response, "requested_count", 0) != commands.size())) {
 			throw new IllegalStateException("Store did not confirm command acknowledgement");
 		}
 	}

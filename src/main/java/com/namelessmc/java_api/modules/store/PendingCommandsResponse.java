@@ -17,7 +17,7 @@ public class PendingCommandsResponse {
 	private final @Nullable Page page;
 
 	PendingCommandsResponse(NamelessAPI api, JsonObject json) {
-		this.useUuids = json.get("online_mode").getAsBoolean();
+		this.useUuids = StoreWire.bool(json, "online_mode");
 		JsonArray customers = json.getAsJsonArray("customers");
 		this.customers = new ArrayList<>(customers.size());
 		for (JsonElement element : customers) {
@@ -44,8 +44,8 @@ public class PendingCommandsResponse {
 		private final int id;
 
 		private Cursor(JsonObject json) {
-			this.order = exactInt(json, "order", Integer.MIN_VALUE);
-			this.id = exactInt(json, "id", 1);
+			this.order = StoreWire.integer(json, "order", Integer.MIN_VALUE);
+			this.id = StoreWire.integer(json, "id", 1);
 		}
 
 		public int order() {
@@ -63,8 +63,8 @@ public class PendingCommandsResponse {
 		private final boolean hasMore;
 
 		private Page(JsonObject json) {
-			this.highWaterId = exactInt(json, "high_water_id", 0);
-			this.hasMore = json.get("has_more").getAsBoolean();
+			this.highWaterId = StoreWire.integer(json, "high_water_id", 0);
+			this.hasMore = StoreWire.bool(json, "has_more");
 			this.nextCursor = json.has("next_cursor") && !json.get("next_cursor").isJsonNull()
 					? new Cursor(json.getAsJsonObject("next_cursor")) : null;
 			if (this.hasMore && this.nextCursor == null) {
@@ -88,13 +88,6 @@ public class PendingCommandsResponse {
 		}
 	}
 
-	private static int exactInt(JsonObject json, String key, int minimum) {
-		long value = json.get(key).getAsLong();
-		if (value < minimum || value > Integer.MAX_VALUE) {
-			throw new IllegalStateException("Invalid Store page " + key);
-		}
-		return (int) value;
-	}
 
 	public static class PendingCommandsCustomer extends StoreCustomer {
 
@@ -133,10 +126,10 @@ public class PendingCommandsResponse {
 		private final boolean requireOnline;
 
 		private PendingCommand(JsonObject json) {
-			this.id = json.get("id").getAsInt();
+			this.id = StoreWire.integer(json, "id", 1);
 			this.command = json.get("command").getAsString();
-			this.orderId = json.get("order_id").getAsInt();
-			this.requireOnline = json.get("require_online").getAsBoolean();
+			this.orderId = StoreWire.integer(json, "order_id", 0);
+			this.requireOnline = StoreWire.bool(json, "require_online");
 		}
 
 		public int id() {

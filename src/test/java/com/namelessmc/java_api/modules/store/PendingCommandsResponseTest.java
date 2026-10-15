@@ -42,4 +42,28 @@ class PendingCommandsResponseTest {
         Assertions.assertThrows(IllegalStateException.class, () -> parse("{\"online_mode\":false,\"customers\":[],"
                 + "\"page\":{\"high_water_id\":60,\"next_cursor\":{\"order\":7,\"id\":61},\"has_more\":true}}"));
     }
+
+    @Test
+    void rejectsCoercionInActualPageParsing() {
+        for (String invalid : new String[]{"\"60\"", "60.5", "6e1", "true", "null", "2147483648"}) {
+            Assertions.assertThrows(IllegalStateException.class, () -> parse("{\"online_mode\":true,\"customers\":[],"
+                    + "\"page\":{\"high_water_id\":" + invalid + ",\"next_cursor\":null,\"has_more\":false}}"), invalid);
+        }
+    }
+
+    @Test
+    void validatesCommandIdsBeforeTheWorkerCanDispatchThem() {
+        for (String invalid : new String[]{"\"1\"", "1.5", "1e0", "true", "null", "0", "-1", "2147483648"}) {
+            Assertions.assertThrows(IllegalStateException.class, () -> parse("{\"online_mode\":true,\"customers\":["
+                    + "{\"customer_id\":1,\"username\":\"Reader\",\"commands\":[{\"id\":" + invalid
+                    + ",\"command\":\"test\",\"order_id\":1,\"require_online\":true}]}]}"), invalid);
+        }
+    }
+
+    @Test
+    void rejectsStringBooleanProtocolValues() {
+        Assertions.assertThrows(IllegalStateException.class, () -> parse("{\"online_mode\":\"true\",\"customers\":[]}"));
+        Assertions.assertThrows(IllegalStateException.class, () -> parse("{\"online_mode\":true,\"customers\":[],"
+                + "\"page\":{\"high_water_id\":0,\"next_cursor\":null,\"has_more\":\"false\"}}"));
+    }
 }
