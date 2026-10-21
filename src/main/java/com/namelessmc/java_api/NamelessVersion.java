@@ -17,7 +17,8 @@ public enum NamelessVersion {
 	V2_0_0_PR_13("2.0.0-pr13", "2.0.0 pre-release 13", 2, 0, true),
 	V2_0(null, "2.0.*", 2, 0, false),
 	V2_1(null, "2.1.*", 2, 1, false),
-	V2_2(null, "2.2.*", 2, 2, false)
+	V2_2(null, "2.2.*", 2, 2, false),
+	V2_3(null, "2.3.*", 2, 3, false)
 
 	;
 
@@ -25,7 +26,8 @@ public enum NamelessVersion {
 			V2_0_0_PR_13,
 			V2_0,
 			V2_1,
-			V2_2
+			V2_2,
+			V2_3
 	);
 
 	private final @Nullable String exactMatchName; // Only for pre-releases

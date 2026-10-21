@@ -232,8 +232,26 @@ public final class NamelessUser implements LanguageEntity {
 		this.invalidateCache(); // Groups modified, invalidate cache
 	}
 	
+	/** @deprecated Use the server-scoped overload; the endpoint requires a server id. */
+	@Deprecated
 	public void updateMinecraftGroups(final String[] addedGroups, final String[] removedGroups) throws NamelessException {
 		final JsonObject post = new JsonObject();
+		post.add("add", this.requests.gson().toJsonTree(addedGroups));
+		post.add("remove", this.requests.gson().toJsonTree(removedGroups));
+		this.requests.post("minecraft/" + this.userTransformer + "/sync-groups", post);
+	}
+
+	/**
+	 * Send a Minecraft group delta for the configured authoritative server (NamelessMC 2.2+).
+	 * The server id is mandatory on the website's identity-scoped endpoint.
+	 */
+	public void updateMinecraftGroups(final int serverId, final String[] addedGroups,
+									  final String[] removedGroups) throws NamelessException {
+		if (serverId <= 0) {
+			throw new IllegalArgumentException("Minecraft group sync server id must be positive");
+		}
+		final JsonObject post = new JsonObject();
+		post.addProperty("server_id", serverId);
 		post.add("add", this.requests.gson().toJsonTree(addedGroups));
 		post.add("remove", this.requests.gson().toJsonTree(removedGroups));
 		this.requests.post("minecraft/" + this.userTransformer + "/sync-groups", post);
